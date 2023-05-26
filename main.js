@@ -2,11 +2,16 @@ import * as THREE from 'three';
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
+//set the scene, camera, renderer and controls
 let camera, scene, renderer, controls;
 
+//execute the main functions
 init();
 animate();
 
+//define the main functions
+
+//init function: initialize the scene, camera, renderer and controls
 function init() {
 	scene = new THREE.Scene();
 	scene.background = new THREE.Color(0x808080);
@@ -107,11 +112,12 @@ backWall.position.set(0, 0.5, -3.90); // Adjust the position as needed
 scene.add(backWall);
 
 
-
+//animate function: animate the scene and the camera
 function animate() {
   	renderer.setAnimationLoop(render);
 }
 
+//render function: render the scene and the camera
 function render() {
   	renderer.render(scene, camera);
 }
