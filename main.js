@@ -1,265 +1,117 @@
 import * as THREE from 'three';
-		import { VRButton } from 'three/addons/webxr/VRButton.js';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-		import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
-		import { OculusHandModel } from 'three/addons/webxr/OculusHandModel.js';
-		import { createText } from 'three/addons/webxr/Text2D.js';
+import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+
+let camera, scene, renderer, controls;
+
+init();
+animate();
+
+function init() {
+	scene = new THREE.Scene();
+	scene.background = new THREE.Color(0x808080);
+
+	camera = new THREE.PerspectiveCamera(
+		60,
+		window.innerWidth / window.innerHeight,
+		0.1,
+		10
+	);
+	camera.position.set(0, 1.2, 0.3);
+
+	scene.add(new THREE.HemisphereLight(0x808080, 0x606060));
+
+	const light = new THREE.DirectionalLight(0xffffff);
+	light.position.set(0, 6, 0);
+	light.castShadow = true;
+	light.shadow.camera.top = 2;
+	light.shadow.camera.bottom = -2;
+	light.shadow.camera.right = 2;
+	light.shadow.camera.left = -2;
+	light.shadow.mapSize.set(4096, 4096);
+	scene.add(light);
+
+	const floorGeometry = new THREE.PlaneGeometry(6, 6);
+	const floorMaterial = new THREE.MeshPhongMaterial({ color: 0x595959 });
+	const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+	floor.rotation.x = -Math.PI / 2;
+	floor.receiveShadow = true;
+	scene.add(floor);
+
+	renderer = new THREE.WebGLRenderer({ antialias: true });
+	renderer.setPixelRatio(window.devicePixelRatio);
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	renderer.outputEncoding = THREE.sRGBEncoding;
+	renderer.shadowMap.enabled = true;
+
+	document.body.appendChild(renderer.domElement);
+	document.body.appendChild(VRButton.createButton(renderer));
+
+	controls = new OrbitControls(camera, renderer.domElement);
+	controls.target.set(0, 1.6, 0);
+	controls.update();
+}
+
+// Shooting stand dimensions
+const standWidth = 4;
+const standHeight = 2;
+const standDepth = 2;
+
+//TEXTURES_______________________________________________________________
+const textureLoader = new THREE.TextureLoader();
+
+//white-red texture for the missing face
+const whiteRedTexture = textureLoader.load('textures/white-red_texture.jpg');
+whiteRedTexture.repeat.set(3, 1);
+whiteRedTexture.wrapS = THREE.RepeatWrapping;
+//wood texture for the left and right wall
+const woodTexture = textureLoader.load('textures/wood_texture.jpg');
+woodTexture.repeat.set(1, 1);
+woodTexture.wrapS = THREE.RepeatWrapping;
+//______________________________________________________________________
+
+
+// Create the missing half face
+const missingFaceGeometry = new THREE.BoxGeometry(standWidth, standHeight / 4, standDepth);
+const missingFaceMaterial = new THREE.MeshBasicMaterial({ map: whiteRedTexture });
+const missingFace = new THREE.Mesh(missingFaceGeometry, missingFaceMaterial);
+missingFace.position.set(0, 0.25, -1.90); // Adjust the position as needed
+scene.add(missingFace);
+
+// Create left wall
+const leftWallGeometry = new THREE.BoxGeometry(standWidth / 16, standHeight, standDepth);
+const leftWallMaterial = new THREE.MeshBasicMaterial({ map: woodTexture });
+const leftWall = new THREE.Mesh(leftWallGeometry, leftWallMaterial);
+leftWall.position.set(-1.90, 0.5, -2); // Adjust the position as needed
+scene.add(leftWall);
+
+// Create right wall
+const rightWallGeometry = new THREE.BoxGeometry(standWidth / 16, standHeight, standDepth);
+const rightWallMaterial = new THREE.MeshBasicMaterial({ map: woodTexture });
+const rightWall = new THREE.Mesh(rightWallGeometry, rightWallMaterial);
+rightWall.position.set(1.90, 0.5, -2); // Adjust the position as needed
+scene.add(rightWall);
+
+// Create roof
+const roofGeometry = new THREE.BoxGeometry(standWidth, standHeight / 4, standDepth);
+const roofMaterial = new THREE.MeshBasicMaterial({ color: 0x808080 });
+const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+roof.position.set(0, 1.90, -2); // Adjust the position as needed
+scene.add(roof);
+
+// Create back wall
+const backWallGeometry = new THREE.BoxGeometry(standWidth + 1, standHeight, standDepth / 4);
+const backWallMaterial = new THREE.MeshBasicMaterial({ color: 8406838 });
+const backWall = new THREE.Mesh(backWallGeometry, backWallMaterial);
+backWall.position.set(0, 0.5, -3.90); // Adjust the position as needed
+scene.add(backWall);
 
-		import { World, System, Component, TagComponent, Types } from 'three/addons/libs/ecsy.module.js';
 
-		class Object3D extends Component { }
 
-		Object3D.schema = {
-			object: { type: Types.Ref }
-		};
+function animate() {
+  	renderer.setAnimationLoop(render);
+}
 
-
-		Button.schema = {
-			// button states: [resting, pressed, fully_pressed, recovering]
-			currState: { type: Types.String, default: 'resting' },
-			prevState: { type: Types.String, default: 'resting' },
-			pressSound: { type: Types.Ref, default: null },
-			releaseSound: { type: Types.Ref, default: null },
-			restingY: { type: Types.Number, default: null },
-			surfaceY: { type: Types.Number, default: null },
-			recoverySpeed: { type: Types.Number, default: 0.4 },
-			fullPressDistance: { type: Types.Number, default: null },
-			action: { type: Types.Ref, default: () => { } }
-		};
-
-
-		ButtonSystem.queries = {
-			buttons: {
-				components: [ Button ]
-			}
-		};
-
-		class Pressable extends TagComponent { }
-
-		class FingerInputSystem extends System {
-
-			init( attributes ) {
-
-				this.hands = attributes.hands;
-
-			}
-
-			execute( delta/*, time*/ ) {
-
-				this.queries.pressable.results.forEach( entity => {
-
-					const button = entity.getMutableComponent( Button );
-					const object = entity.getComponent( Object3D ).object;
-					const pressingDistances = [];
-					this.hands.forEach( hand => {
-
-						if ( hand && hand.intersectBoxObject( object ) ) {
-
-							const pressingPosition = hand.getPointerPosition();
-							pressingDistances.push( button.surfaceY - object.worldToLocal( pressingPosition ).y );
-
-						}
-
-					} );
-					if ( pressingDistances.length == 0 ) { // not pressed this frame
-
-						if ( object.position.y < button.restingY ) {
-
-							object.position.y += button.recoverySpeed * delta;
-							button.currState = 'recovering';
-
-						} else {
-
-							object.position.y = button.restingY;
-							button.currState = 'resting';
-
-						}
-
-					} else {
-
-						button.currState = 'pressed';
-						const pressingDistance = Math.max( pressingDistances );
-						if ( pressingDistance > 0 ) {
-
-							object.position.y -= pressingDistance;
-
-						}
-
-						if ( object.position.y <= button.restingY - button.fullPressDistance ) {
-
-							button.currState = 'fully_pressed';
-							object.position.y = button.restingY - button.fullPressDistance;
-
-						}
-
-					}
-
-				} );
-
-			}
-
-		}
-
-		FingerInputSystem.queries = {
-			pressable: {
-				components: [ Pressable ]
-			}
-		};
-
-		class Rotating extends TagComponent { }
-
-		class RotatingSystem extends System {
-
-			execute( delta/*, time*/ ) {
-
-				this.queries.rotatingObjects.results.forEach( entity => {
-
-					const object = entity.getComponent( Object3D ).object;
-					object.rotation.x += 2 * delta;
-					object.rotation.y += 0.4 * delta;
-
-				} );
-
-			}
-
-		}
-
-		RotatingSystem.queries = {
-			rotatingObjects: {
-				components: [ Rotating ]
-			}
-		};
-
-		class HandsInstructionText extends TagComponent { }
-
-		class InstructionSystem extends System {
-
-			init( attributes ) {
-
-				this.controllers = attributes.controllers;
-
-			}
-
-			execute( /*delta, time*/ ) {
-
-				let visible = false;
-				this.controllers.forEach( controller => {
-
-					if ( controller.visible ) {
-
-						visible = true;
-
-					}
-
-				} );
-
-				this.queries.instructionTexts.results.forEach( entity => {
-
-					const object = entity.getComponent( Object3D ).object;
-					object.visible = visible;
-
-				} );
-
-			}
-
-		}
-
-		InstructionSystem.queries = {
-			instructionTexts: {
-				components: [ HandsInstructionText ]
-			}
-		};
-
-		class OffsetFromCamera extends Component { }
-
-		OffsetFromCamera.schema = {
-			x: { type: Types.Number, default: 0 },
-			y: { type: Types.Number, default: 0 },
-			z: { type: Types.Number, default: 0 },
-		};
-
-		class NeedCalibration extends TagComponent { }
-
-		class CalibrationSystem extends System {
-
-			init( attributes ) {
-
-				this.camera = attributes.camera;
-				this.renderer = attributes.renderer;
-
-			}
-
-			execute( /*delta, time*/ ) {
-
-				this.queries.needCalibration.results.forEach( entity => {
-
-					if ( this.renderer.xr.getSession() ) {
-
-						const offset = entity.getComponent( OffsetFromCamera );
-						const object = entity.getComponent( Object3D ).object;
-						const xrCamera = this.renderer.xr.getCamera();
-						object.position.x = xrCamera.position.x + offset.x;
-						object.position.y = xrCamera.position.y + offset.y;
-						object.position.z = xrCamera.position.z + offset.z;
-						entity.removeComponent( NeedCalibration );
-
-					}
-
-				} );
-
-			}
-
-		}
-
-		CalibrationSystem.queries = {
-			needCalibration: {
-				components: [ NeedCalibration ]
-			}
-		};
-
-		const world = new World();
-		const clock = new THREE.Clock();
-		let camera, scene, renderer;
-
-        let room;
-
-		let controller1, controller2;
-
-        let cursor = new THREE.Vector3();
-
-
-		init();
-		animate();
-
-		function makeButtonMesh( x, y, z, color ) {
-
-			const geometry = new THREE.BoxGeometry( x, y, z );
-			const material = new THREE.MeshPhongMaterial( { color: color } );
-			const buttonMesh = new THREE.Mesh( geometry, material );
-			buttonMesh.castShadow = true;
-			buttonMesh.receiveShadow = true;
-			return buttonMesh;
-
-		}
-
-		function init() {
-
-		
-
-        }
-        //end painting demo code____________________________________________________
-
-		function animate() {
-
-			renderer.setAnimationLoop( render );
-
-		}
-
-		function render() {
-
-            handleController( controller1 );
-            handleController( controller2 );
-
-			renderer.render( scene, camera );
-
-		}
+function render() {
+  	renderer.render(scene, camera);
+}
