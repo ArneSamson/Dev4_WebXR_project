@@ -53,19 +53,59 @@ function init() {
 }
 
 // Shooting stand dimensions
-const standWidth = 10;
-const standHeight = 1;
-const standDepth = 5;
-// Shooting stand material
-const standMaterial = new THREE.MeshBasicMaterial({ color: 8407424 });
-// Create the shooting stand geometry
-const standGeometry = new THREE.BoxGeometry(standWidth, standHeight, standDepth);
-// Create the shooting stand mesh
-const shootingStand = new THREE.Mesh(standGeometry, standMaterial);
-// Position the shooting stand in the scene
-shootingStand.position.set(0, 0.5, -2); // Adjust the position as needed
-// Add the shooting stand to the scene
-scene.add(shootingStand);
+const standWidth = 4;
+const standHeight = 2;
+const standDepth = 2;
+
+//TEXTURES_______________________________________________________________
+const textureLoader = new THREE.TextureLoader();
+
+//white-red texture for the missing face
+const whiteRedTexture = textureLoader.load('textures/white-red_texture.jpg');
+whiteRedTexture.repeat.set(3, 1);
+whiteRedTexture.wrapS = THREE.RepeatWrapping;
+//wood texture for the left and right wall
+const woodTexture = textureLoader.load('textures/wood_texture.jpg');
+woodTexture.repeat.set(1, 1);
+woodTexture.wrapS = THREE.RepeatWrapping;
+//______________________________________________________________________
+
+
+// Create the missing half face
+const missingFaceGeometry = new THREE.BoxGeometry(standWidth, standHeight / 4, standDepth);
+const missingFaceMaterial = new THREE.MeshBasicMaterial({ map: whiteRedTexture });
+const missingFace = new THREE.Mesh(missingFaceGeometry, missingFaceMaterial);
+missingFace.position.set(0, 0.25, -1.90); // Adjust the position as needed
+scene.add(missingFace);
+
+// Create left wall
+const leftWallGeometry = new THREE.BoxGeometry(standWidth / 16, standHeight, standDepth);
+const leftWallMaterial = new THREE.MeshBasicMaterial({ map: woodTexture });
+const leftWall = new THREE.Mesh(leftWallGeometry, leftWallMaterial);
+leftWall.position.set(-1.90, 0.5, -2); // Adjust the position as needed
+scene.add(leftWall);
+
+// Create right wall
+const rightWallGeometry = new THREE.BoxGeometry(standWidth / 16, standHeight, standDepth);
+const rightWallMaterial = new THREE.MeshBasicMaterial({ map: woodTexture });
+const rightWall = new THREE.Mesh(rightWallGeometry, rightWallMaterial);
+rightWall.position.set(1.90, 0.5, -2); // Adjust the position as needed
+scene.add(rightWall);
+
+// Create roof
+const roofGeometry = new THREE.BoxGeometry(standWidth, standHeight / 4, standDepth);
+const roofMaterial = new THREE.MeshBasicMaterial({ color: 0x808080 });
+const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+roof.position.set(0, 1.90, -2); // Adjust the position as needed
+scene.add(roof);
+
+// Create back wall
+const backWallGeometry = new THREE.BoxGeometry(standWidth + 1, standHeight, standDepth / 4);
+const backWallMaterial = new THREE.MeshBasicMaterial({ color: 8406838 });
+const backWall = new THREE.Mesh(backWallGeometry, backWallMaterial);
+backWall.position.set(0, 0.5, -3.90); // Adjust the position as needed
+scene.add(backWall);
+
 
 
 function animate() {
