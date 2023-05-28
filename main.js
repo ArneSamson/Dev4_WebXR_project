@@ -133,25 +133,29 @@ function loadBalloonModel() {
 	loader.load('assets/balloon/scene.gltf', function (gltf) {
 	  const balloon = gltf.scene;
 
-	  	// Find the material used by the balloon
-		const balloonMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
-		balloon.traverse(function (node) {
-			if (node.isMesh) {
-				node.material = balloonMaterial;
-			}
-		});
+		balloon.scale.set(0.005, 0.005, 0.005);
+		balloon.position.set(0, 0, -2); // Adjust the position as needed
+		scene.add(balloon);
+		// Iterate over the materials defined in the GLTF model
+		gltf.scene.traverse(function (child) {
+		if (child.isMesh) {
+		  const materials = child.material;
+  
+		  if (Array.isArray(materials)) {
+			// Iterate over multiple materials (if applicable)
+			materials.forEach(function (material) {
+			  // Apply the material to the corresponding object
+			  material.color = new THREE.Color(material.color);
+			  child.material = material;
+			});
+		  } else {
+			// Single material case
+			materials.color = new THREE.Color(materials.color);
+			child.material = materials;
+		  }
+		}
+	  });
 
-		// Load and set the texture for the balloon material
-		const textureLoader = new THREE.TextureLoader();
-		textureLoader.load('textures/white-red_texture.jpg', function (texture) {
-			balloonMaterial.map = texture;
-			balloonMaterial.needsUpdate = true;
-		});
-
-
-	  balloon.scale.set(0.005, 0.005, 0.005);
-	  balloon.position.set(0, 0, -2); // Adjust the position as needed
-	  scene.add(balloon);
 	});
   }
  //balloon 
