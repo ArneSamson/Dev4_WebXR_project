@@ -64,7 +64,8 @@ function init() {
 	loadBalloonModel();
 	//balloon
 	//dart
-	loadDartModel();
+	loadDartModel("blue");
+	loadDartModel("red");
 	//dart
 
 }
@@ -160,40 +161,33 @@ function loadBalloonModel() {
   }
  //balloon 
  //Dart
-function loadDartModel() {
+function loadDartModel(color) {
 	const loader = new GLTFLoader();
+	if(color == "blue"){
+		loader.load('assets/darts/blue/scene.gltf', function (gltf) {
+			const themodel = gltf.scene;
+	  
+			themodel.scale.set(0.005, 0.005, 0.005);
+				themodel.position.set(0, 1.5, 0); // Adjust the position as needed
+			  scene.add(themodel);
+			  // Iterate over the materials defined in the GLTF model
+		  });
+	}
+	if(color == "red"){
+	loader.load('assets/darts/red/scene.gltf', function (gltf) {
+		const themodel = gltf.scene;
+  
+		themodel.scale.set(0.005, 0.005, 0.005);
+			themodel.position.set(0, 1.5, 0); // Adjust the position as needed
+		  scene.add(themodel);
+		  // Iterate over the materials defined in the GLTF model
+	  });
+	}
+	
 
 	
-  
-	loader.load('assets/dart/scene.gltf', function (gltf) {
-	  const themodel = gltf.scene;
-
-	  themodel.scale.set(0.005, 0.005, 0.005);
-	  	themodel.position.set(0, 1.5, 0); // Adjust the position as needed
-		scene.add(themodel);
-		// Iterate over the materials defined in the GLTF model
-		gltf.scene.traverse(function (child) {
-		if (child.isMesh) {
-		  const materials = child.material;
-  
-		  if (Array.isArray(materials)) {
-			// Iterate over multiple materials (if applicable)
-			materials.forEach(function (material) {
-			  // Apply the material to the corresponding object
-			  material.color = new THREE.Color(material.color);
-			  child.material = material;
-			});
-		  } else {
-			// Single material case
-			materials.color = new THREE.Color(materials.color);
-			child.material = materials;
-		  }
-		}
-	  });
-
-	});
   }
- //Dart 
+ //Dart
 
 //animate function: animate the scene and the camera
 function animate() {
