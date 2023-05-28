@@ -10,7 +10,6 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 let camera, scene, renderer, controls;
 
 //balloon
-let textureLoader
 //balloon
 
 //execute the main functions
@@ -76,6 +75,13 @@ const standHeight = 2;
 const standDepth = 2;
 
  
+//TEXTURES_______________________________________________________________
+const textureLoader = new THREE.TextureLoader();
+
+//white-red texture for the missing face
+const whiteRedTexture = textureLoader.load('textures/white-red_texture.jpg');
+whiteRedTexture.repeat.set(3, 1);
+whiteRedTexture.wrapS = THREE.RepeatWrapping;
 //wood texture for the left and right wall
 const woodTexture = textureLoader.load('textures/wood_texture.jpg');
 woodTexture.repeat.set(1, 1);
