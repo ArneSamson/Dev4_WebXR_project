@@ -8,6 +8,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 //set the scene, camera, renderer and controls
 let camera, scene, renderer, controls;
+let vrDisplay, vrFrameData;
 
 //execute the main functions
 init();
@@ -59,7 +60,16 @@ function init() {
 	controls = new OrbitControls(camera, renderer.domElement);
 	controls.target.set(0, 1.6, 0);
 	controls.update();
-
+	navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
+		if (supported) {
+		  renderer.xr.enabled = true;
+		  renderer.xr.setReferenceSpaceType('local');
+		  renderer.xr.setSession('immersive-vr').then((session) => {
+			vrDisplay = session.display;
+			vrFrameData = new VRFrameData();
+		  });
+		}
+	  });
 	//balloon
 	loadBalloonModel();
 	//balloon
@@ -68,6 +78,7 @@ function init() {
 	loadDartModel("red");
 	//dart
 
+	window.addEventListener('resize', onWindowResize, false);
 }
 
 // Shooting stand dimensions
@@ -159,8 +170,8 @@ function loadBalloonModel() {
 
 	});
   }
- //balloon 
- //Dart
+//  balloon 
+//  Dart
 function loadDartModel(color) {
 	const loader = new GLTFLoader();
 	if(color == "blue"){
@@ -197,4 +208,12 @@ function animate() {
 //render function: render the scene and the camera
 function render() {
   	renderer.render(scene, camera);
+	if (vrDisplay && renderer.xr.isPresenting) {
+		vrDisplay.submitFrame();
+	}
 }
+function onWindowResize() {
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
+	renderer.setSize(window.innerWidth, window.innerHeight);
+  }
