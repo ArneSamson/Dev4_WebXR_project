@@ -9,9 +9,6 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 //set the scene, camera, renderer and controls
 let camera, scene, renderer, controls;
 
-//balloon
-//balloon
-
 //execute the main functions
 init();
 animate();
@@ -66,6 +63,9 @@ function init() {
 	//balloon
 	loadBalloonModel();
 	//balloon
+	//dart
+	loadDartModel();
+	//dart
 
 }
 
@@ -159,6 +159,41 @@ function loadBalloonModel() {
 	});
   }
  //balloon 
+ //Dart
+function loadDartModel() {
+	const loader = new GLTFLoader();
+
+	
+  
+	loader.load('assets/dart/scene.gltf', function (gltf) {
+	  const themodel = gltf.scene;
+
+	  themodel.scale.set(0.005, 0.005, 0.005);
+	  	themodel.position.set(0, 1.5, 0); // Adjust the position as needed
+		scene.add(themodel);
+		// Iterate over the materials defined in the GLTF model
+		gltf.scene.traverse(function (child) {
+		if (child.isMesh) {
+		  const materials = child.material;
+  
+		  if (Array.isArray(materials)) {
+			// Iterate over multiple materials (if applicable)
+			materials.forEach(function (material) {
+			  // Apply the material to the corresponding object
+			  material.color = new THREE.Color(material.color);
+			  child.material = material;
+			});
+		  } else {
+			// Single material case
+			materials.color = new THREE.Color(materials.color);
+			child.material = materials;
+		  }
+		}
+	  });
+
+	});
+  }
+ //Dart 
 
 //animate function: animate the scene and the camera
 function animate() {
