@@ -127,11 +127,30 @@ scene.add(backWall);
 //balloon
 function loadBalloonModel() {
 	const loader = new GLTFLoader();
+
+	
   
 	loader.load('assets/balloon/scene.gltf', function (gltf) {
 	  const balloon = gltf.scene;
-	  balloon.scale.set(0.5, 0.5, 0.5);
-	  balloon.position.set(0, 2, -2); // Adjust the position as needed
+
+	  	// Find the material used by the balloon
+		const balloonMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+		balloon.traverse(function (node) {
+			if (node.isMesh) {
+				node.material = balloonMaterial;
+			}
+		});
+
+		// Load and set the texture for the balloon material
+		const textureLoader = new THREE.TextureLoader();
+		textureLoader.load('textures/white-red_texture.jpg', function (texture) {
+			balloonMaterial.map = texture;
+			balloonMaterial.needsUpdate = true;
+		});
+
+
+	  balloon.scale.set(0.005, 0.005, 0.005);
+	  balloon.position.set(0, 2, 0); // Adjust the position as needed
 	  scene.add(balloon);
 	});
   }
