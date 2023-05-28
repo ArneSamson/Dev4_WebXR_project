@@ -2,8 +2,16 @@ import * as THREE from 'three';
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
+//balloon
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+//balloon
+
 //set the scene, camera, renderer and controls
 let camera, scene, renderer, controls;
+
+//balloon
+let textureLoader
+//balloon
 
 //execute the main functions
 init();
@@ -55,6 +63,11 @@ function init() {
 	controls = new OrbitControls(camera, renderer.domElement);
 	controls.target.set(0, 1.6, 0);
 	controls.update();
+
+	//balloon
+	loadBalloonModel();
+	//balloon
+
 }
 
 // Shooting stand dimensions
@@ -62,13 +75,7 @@ const standWidth = 4;
 const standHeight = 2;
 const standDepth = 2;
 
-//TEXTURES_______________________________________________________________
-const textureLoader = new THREE.TextureLoader();
-
-//white-red texture for the missing face
-const whiteRedTexture = textureLoader.load('textures/white-red_texture.jpg');
-whiteRedTexture.repeat.set(3, 1);
-whiteRedTexture.wrapS = THREE.RepeatWrapping;
+ 
 //wood texture for the left and right wall
 const woodTexture = textureLoader.load('textures/wood_texture.jpg');
 woodTexture.repeat.set(1, 1);
@@ -111,6 +118,18 @@ const backWall = new THREE.Mesh(backWallGeometry, backWallMaterial);
 backWall.position.set(0, 0.5, -3.90); // Adjust the position as needed
 scene.add(backWall);
 
+//balloon
+function loadBalloonModel() {
+	const loader = new GLTFLoader();
+  
+	loader.load('assets/balloon/scene.gltf', function (gltf) {
+	  const balloon = gltf.scene;
+	  balloon.scale.set(0.5, 0.5, 0.5);
+	  balloon.position.set(0, 2, -2); // Adjust the position as needed
+	  scene.add(balloon);
+	});
+  }
+ //balloon 
 
 //animate function: animate the scene and the camera
 function animate() {
