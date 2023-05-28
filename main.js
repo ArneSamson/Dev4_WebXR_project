@@ -150,7 +150,7 @@ function loadBalloonModel() {
 
 
 	  balloon.scale.set(0.005, 0.005, 0.005);
-	  balloon.position.set(0, 2, 0); // Adjust the position as needed
+	  balloon.position.set(0, 0, -2); // Adjust the position as needed
 	  scene.add(balloon);
 	});
   }
