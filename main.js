@@ -21,12 +21,12 @@ function init() {
 	scene.background = new THREE.Color(0x808080);
 
 	camera = new THREE.PerspectiveCamera(
-		60,
+		80,
 		window.innerWidth / window.innerHeight,
 		0.1,
 		10
 	);
-	camera.position.set(0, 1.2, 0.3);
+	camera.position.set(0, 1.6, 1);
 
 	scene.add(new THREE.HemisphereLight(0x808080, 0x606060));
 
