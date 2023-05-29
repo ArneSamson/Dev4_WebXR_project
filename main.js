@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { XRControllerModelFactory } from 'three/examples/jsm/webxr/XRControllerModelFactory.js';
+
 
 let camera, scene, renderer, controls;
 let vrDisplay, vrFrameData;
@@ -76,6 +78,23 @@ function init() {
 		}
 	});
 
+	navigator.xr.requestSession('immersive-vr').then((session) => {
+		renderer.xr.setSession(session);
+	
+		const controllerModelFactory = new XRControllerModelFactory();
+	
+		const controllerGrip1 = renderer.xr.getControllerGrip(0);
+		controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
+		scene.add(controllerGrip1);
+	
+		const controllerGrip2 = renderer.xr.getControllerGrip(1);
+		controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2));
+		scene.add(controllerGrip2);
+	}).catch((error) => {
+		console.error('Failed to start XR session:', error);
+	});
+	
+
 	loadBalloonModel();
 	loadDartModel("blue");
 	loadDartModel("red");
@@ -92,6 +111,7 @@ function init() {
 	});
 	window.addEventListener('resize', onWindowResize, false);
 
+	
 	// renderer.domElement.addEventListener('click', shootDart);
 	renderer.xr.addEventListener('selectstart', shootDart);
 }
@@ -123,6 +143,7 @@ missingFace.position.set(0, 0.25, -1.03); // Adjust the position as needed
 scene.add(missingFace);
 // Create left wall
 const leftWallGeometry = new THREE.BoxGeometry(standWidth / 16, standHeight * 1.5, standDepth);
+//transparent wall
 const leftWallMaterial = new THREE.MeshBasicMaterial({ map: woodTexture });
 const leftWall = new THREE.Mesh(leftWallGeometry, leftWallMaterial);
 leftWall.position.set(-1.90, 0.5, -2); // Adjust the position as needed
