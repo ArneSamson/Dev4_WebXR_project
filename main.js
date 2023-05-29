@@ -69,11 +69,11 @@ function init() {
 	controls.target.set(0, 1.6, 0);
 	controls.update();
 
-	navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
+	navigator.xr.isSessionSupported('immersive-vr', { optionalFeatures: ['local-floor'] }).then((supported) => {
 		if (supported) {
 			renderer.xr.enabled = true;
-			renderer.xr.setReferenceSpaceType('local');
-			renderer.xr.setSession('immersive-vr').then((session) => {
+			renderer.xr.setReferenceSpaceType('local-floor');
+			renderer.xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor'] }).then((session) => {
 				vrDisplay = session.display;
 				vrFrameData = new VRFrameData();
 			});
