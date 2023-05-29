@@ -12,6 +12,12 @@ let vrDisplay, vrFrameData;
 let balloon;
 
 
+let dart;
+
+let direction = new THREE.Vector3();
+const dartSpeed = 0.1;
+
+
 //execute the main functions
 init();
 animate();
@@ -29,7 +35,7 @@ function init() {
 		0.1,
 		10
 	);
-	camera.position.set(0, 1.6, 1);
+	camera.position.set(0, 1.2, 0.3);
 
 	scene.add(new THREE.HemisphereLight(0x808080, 0x606060));
 
@@ -81,6 +87,9 @@ function init() {
 	//dart
 
 	window.addEventListener('resize', onWindowResize, false);
+
+	renderer.domElement.addEventListener('click', shootDart);
+
 }
 
 // Shooting stand dimensions
@@ -104,10 +113,10 @@ woodTexture.wrapS = THREE.RepeatWrapping;
 
 
 // Create the missing half face
-const missingFaceGeometry = new THREE.BoxGeometry(standWidth, standHeight / 4, standDepth);
+const missingFaceGeometry = new THREE.BoxGeometry(standWidth, standHeight / 4, standDepth/6);
 const missingFaceMaterial = new THREE.MeshBasicMaterial({ map: whiteRedTexture });
 const missingFace = new THREE.Mesh(missingFaceGeometry, missingFaceMaterial);
-missingFace.position.set(0, 0.25, -1.90); // Adjust the position as needed
+missingFace.position.set(0, 0.25, -1); // Adjust the position as needed
 scene.add(missingFace);
 
 // Create left wall
@@ -188,31 +197,78 @@ function loadBalloonModel() {
   }
   
 //  balloon 
+
 //  Dart
 function loadDartModel(color) {
-	const loader = new GLTFLoader();
-	if(color == "blue"){
-		loader.load('assets/darts/blue/scene.gltf', function (gltf) {
-			const themodel = gltf.scene;
-	  
-			themodel.scale.set(0.005, 0.005, 0.005);
-				themodel.position.set(0, 1.5, 0); // Adjust the position as needed
-			  scene.add(themodel);
-			  // Iterate over the materials defined in the GLTF model
-		  });
-	}
-	if(color == "red"){
-	loader.load('assets/darts/red/scene.gltf', function (gltf) {
-		const themodel = gltf.scene;
-  
-		themodel.scale.set(0.005, 0.005, 0.005);
-			themodel.position.set(0, 1.5, 0); // Adjust the position as needed
-		  scene.add(themodel);
-		  // Iterate over the materials defined in the GLTF model
-	  });
-	}
-  }
- //Dart
+	return new Promise((resolve, reject) => {
+		const loader = new GLTFLoader();
+		if (color === "blue") {
+			loader.load('assets/darts/blue/scene.gltf', function (gltf) {
+				const dart = gltf.scene;
+				dart.scale.set(0.005, 0.005, 0.005);
+				// Adjust the position and other properties of the dart if needed
+				resolve(dart);
+			}, undefined, reject);
+		} else if (color === "red") {
+			loader.load('assets/darts/red/scene.gltf', function (gltf) {
+				const dart = gltf.scene;
+				dart.scale.set(0.005, 0.005, 0.005);
+				// Adjust the position and other properties of the dart if needed
+				resolve(dart);
+			}, undefined, reject);
+		} else {
+			reject(new Error('Invalid color for dart'));
+		}
+	});
+}
+
+function shootDart() {
+	// Create the dart
+	loadDartModel("red")
+		.then((loadedDart) => {
+			dart = loadedDart;
+			// Set the dart's initial position and direction based on the controller's position and orientation
+			const controller = renderer.xr.getController(0);
+			dart.position.copy(controller.position);
+			dart.quaternion.copy(controller.quaternion);
+
+			// Set the dart's velocity
+			const velocity = new THREE.Vector3();
+			const direction = new THREE.Vector3();
+			controller.getWorldDirection(direction);
+			velocity.copy(direction).multiplyScalar(-0.5);
+
+			// Add the dart to the scene
+			scene.add(dart);
+
+			// Update the dart's position and velocity every frame
+			const clock = new THREE.Clock();
+			clock.start();
+			const tick = () => {
+				const delta = clock.getDelta();
+				dart.position.add(velocity.clone().multiplyScalar(delta));
+				velocity.y -= 0.01;
+				if (dart.position.y < 0) {
+					scene.remove(dart);
+				} else {
+					requestAnimationFrame(tick);
+				}
+			};
+
+			tick();
+
+			// Cleanup dart after 5 seconds
+			setTimeout(() => {
+				scene.remove(dart);
+			}, 5000);
+		})
+		.catch((error) => {
+			console.error(error);
+		});
+}
+
+
+//Dart
 
 //animate function: animate the scene and the camera
 function animate() {
@@ -222,8 +278,17 @@ function animate() {
 
 //render function: render the scene and the camera
 function render() {
-  	renderer.render(scene, camera);
+
+	if(dart){
+		//animate dart's movement
+		dart.position.addScaledVector(direction, dartSpeed);
+	}
+
+  renderer.render(scene, camera);
 	animateBalloon();
+	if (vrDisplay && renderer.xr.isPresenting) {
+		vrDisplay.submitFrame();
+	}
 }
 function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
