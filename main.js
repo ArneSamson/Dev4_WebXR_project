@@ -21,7 +21,6 @@ let activeDarts = [];
 
 let stand;
 
-let isDartInMotion = false;
 let dart;
 let direction = new THREE.Vector3();
 const dartSpeed = 0.1;
@@ -85,7 +84,7 @@ function init() {
 			});
 		}
 	});
-
+	
 
 	loadStand();
 	loadBalloonModel();
@@ -106,7 +105,14 @@ function init() {
 
 	//controllers_________________________________________________________ 
 
+	let isDartInMotion = false;
+
 	function onSelectStart() {
+		if(!isDartInMotion){
+			isDartInMotion = true;
+			shootDart();
+		}
+		// shootDart();
 		this.userData.isSelecting = true;
 	}
 
@@ -141,7 +147,7 @@ function init() {
 	controllerGrip1 = renderer.xr.getControllerGrip(0);
 	controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
 	scene.add(controllerGrip1);
-
+	
 	controllerGrip2 = renderer.xr.getControllerGrip(1);
 	controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2));
 	scene.add(controllerGrip2);
@@ -259,20 +265,24 @@ function loadDartModel(color) {
 	});
 }
 
-function shootDart(controller) {
-	// const controller = controller1;
+function shootDart() {
+	const controller = controller1;
 
-	const dart = dart.clone();
-	dart.position.copy(controller.position);
-	dart.quaternion.copy(controller.quaternion);
-	dart.velocity = new THREE.Vector3();
-	dart.velocity.x = -dartSpeed;
-	dart.velocity.applyQuaternion(dart.quaternion);
+	loadDartModel("red")
+		.then((loadedDart) => {
+			const dart = loadedDart;
+			dart.position.copy(controller.position);
+			dart.quaternion.copy(controller.quaternion);
+			dart.velocity = new THREE.Vector3();
+			dart.velocity.x = -dartSpeed;
+			dart.velocity.applyQuaternion(controller.quaternion);
 
-	scene.add(dart);
-	activeDarts.push({ dart, controller });
-
-	isDartInMotion = true; // Set the flag to indicate a dart is in motion
+			scene.add(dart);
+			activeDarts.push({ dart, controller });
+		})
+		.catch((error) => {
+			console.error(error);
+		});
 }
 
 function onWindowResize() {
@@ -282,15 +292,19 @@ function onWindowResize() {
 	renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-function handleController(controller) {
+function handleController( controller ) {
 
-	if (controller.userData.isSelecting) {
+	if ( controller.userData.isSelecting ) {
 
-		if (isDartInMotion) {
-			return;
-		}
+		const object = room.children[ count ++ ];
 
-		shootDart(controller);
+		object.position.copy( controller.position );
+		object.userData.velocity.x = ( Math.random() - 0.5 ) * 3;
+		object.userData.velocity.y = ( Math.random() - 0.5 ) * 3;
+		object.userData.velocity.z = ( Math.random() - 9 );
+		object.userData.velocity.applyQuaternion( controller.quaternion );
+
+		if ( count === scene.children.length ) count = 0;
 
 	}
 
@@ -301,18 +315,16 @@ function animate() {
 	renderer.setAnimationLoop(() => {
 		render();
 		animateBalloon();
-		//controllers_________________________________________________________
-		handleController(controller1);
-		handleController(controller2);
-		//____________________________________________________________________
+		// handleController( controller1 );
+		// handleController( controller2 );
 	});
 }
 
 function render() {
 
 	//controllers_________________________________________________________
-	handleController(controller1);
-	handleController(controller2);
+	handleController( controller1 );
+	handleController( controller2 );
 	//____________________________________________________________________
 
 	const delta = vrFrameData ? vrFrameData.deltaTime : 0.01;
