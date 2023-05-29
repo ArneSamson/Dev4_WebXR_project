@@ -71,28 +71,24 @@ function init() {
 		if (supported) {
 			renderer.xr.enabled = true;
 			renderer.xr.setReferenceSpaceType('local');
-			renderer.xr.setSession('immersive-vr').then((session) => {
+			renderer.xr.requestSession('immersive-vr').then((session) => {
 				vrDisplay = session.display;
 				vrFrameData = new VRFrameData();
+				renderer.xr.setSession(session);
+	
+				const controllerModelFactory = new XRControllerModelFactory();
+	
+				const controllerGrip1 = renderer.xr.getControllerGrip(0);
+				controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
+				scene.add(controllerGrip1);
+	
+				const controllerGrip2 = renderer.xr.getControllerGrip(1);
+				controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2));
+				scene.add(controllerGrip2);
 			});
 		}
 	});
-
-	navigator.xr.requestSession('immersive-vr').then((session) => {
-		renderer.xr.setSession(session);
 	
-		const controllerModelFactory = new XRControllerModelFactory();
-	
-		const controllerGrip1 = renderer.xr.getControllerGrip(0);
-		controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
-		scene.add(controllerGrip1);
-	
-		const controllerGrip2 = renderer.xr.getControllerGrip(1);
-		controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2));
-		scene.add(controllerGrip2);
-	}).catch((error) => {
-		console.error('Failed to start XR session:', error);
-	});
 	
 
 	loadBalloonModel();
@@ -111,7 +107,7 @@ function init() {
 	});
 	window.addEventListener('resize', onWindowResize, false);
 
-	
+
 	// renderer.domElement.addEventListener('click', shootDart);
 	renderer.xr.addEventListener('selectstart', shootDart);
 }
