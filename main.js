@@ -79,6 +79,9 @@ function init() {
 	//dart
 
 	window.addEventListener('resize', onWindowResize, false);
+
+	renderer.domElement.addEventListener('click', shootDart);
+
 }
 
 // Shooting stand dimensions
@@ -102,10 +105,10 @@ woodTexture.wrapS = THREE.RepeatWrapping;
 
 
 // Create the missing half face
-const missingFaceGeometry = new THREE.BoxGeometry(standWidth, standHeight / 4, standDepth);
+const missingFaceGeometry = new THREE.BoxGeometry(standWidth, standHeight / 4, standDepth/6);
 const missingFaceMaterial = new THREE.MeshBasicMaterial({ map: whiteRedTexture });
 const missingFace = new THREE.Mesh(missingFaceGeometry, missingFaceMaterial);
-missingFace.position.set(0, 0.25, -1.90); // Adjust the position as needed
+missingFace.position.set(0, 0.25, -1); // Adjust the position as needed
 scene.add(missingFace);
 
 // Create left wall
@@ -171,6 +174,7 @@ function loadBalloonModel() {
 	});
   }
 //  balloon 
+
 //  Dart
 function loadDartModel(color) {
 	const loader = new GLTFLoader();
@@ -197,8 +201,52 @@ function loadDartModel(color) {
 	
 
 	
-  }
- //Dart
+}
+
+function shootDart() {
+	// Create the dart
+	const dart = loadDartModel("red");
+
+  	// Set the dart's initial position and direction based on the controller's position and orientation
+	const controller = renderer.xr.getController(0);
+	dart.position.copy(controller.position);
+	dart.quaternion.copy(controller.quaternion);
+
+	// Set the dart's velocity
+	const velocity = new THREE.Vector3();
+	const direction = new THREE.Vector3();
+	controller.getWorldDirection(direction);
+	velocity.copy(direction).multiplyScalar(-0.5);
+
+	// Add the dart to the scene
+	scene.add(dart);
+
+	// Update the dart's position and velocity every frame
+	const clock = new THREE.Clock();
+	clock.start();
+	const tick = () => {
+		const delta = clock.getDelta();
+		dart.position.add(velocity.clone().multiplyScalar(delta));
+		velocity.y -= 0.01;
+		if (dart.position.y < 0) {
+			scene.remove(dart);
+		} else {
+			requestAnimationFrame(tick);
+		}
+	}
+
+	tick();
+
+	//cleanup dart after 5 seconds
+	setTimeout(() => {
+		scene.remove(dart);
+	}
+	, 5000);
+
+}
+
+
+//Dart
 
 //animate function: animate the scene and the camera
 function animate() {
