@@ -52,13 +52,6 @@ function init() {
 	light.shadow.mapSize.set(4096, 4096);
 	scene.add(light);
 
-	const floorGeometry = new THREE.PlaneGeometry(8, 8);
-	const floorMaterial = new THREE.MeshPhongMaterial({ color: 0x595959 });
-	const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-	floor.rotation.x = -Math.PI / 2;
-	floor.receiveShadow = true;
-	scene.add(floor);
-
 	renderer = new THREE.WebGLRenderer({ antialias: true });
 	renderer.setPixelRatio(window.devicePixelRatio);
 	renderer.setSize(window.innerWidth, window.innerHeight);
@@ -127,6 +120,10 @@ const standDepth = 2;
 
 //TEXTURES_______________________________________________________________
 const textureLoader = new THREE.TextureLoader();
+//grass texture for the floor
+const stone = textureLoader.load('textures/stones.jpg');
+stone.repeat.set(1, 1);
+stone.wrapS = THREE.RepeatWrapping;
 //white-red texture for the missing face
 const whiteRedTexture = textureLoader.load('textures/white-red_texture.jpg');
 whiteRedTexture.repeat.set(3, 1);
@@ -139,6 +136,13 @@ woodTexture.wrapS = THREE.RepeatWrapping;
 
 
 //______________________________________________________________________
+//floor
+const floorGeometry = new THREE.PlaneGeometry(8, 8);
+const floorMaterial = new THREE.MeshBasicMaterial({ map: stone });
+const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
 // Create left wall
 const leftWallGeometry = new THREE.BoxGeometry(standWidth / 16, standHeight * 1.5, standDepth);
 const leftWallMaterial = new THREE.MeshBasicMaterial({ map: woodTexture });
