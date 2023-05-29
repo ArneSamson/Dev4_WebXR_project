@@ -25,6 +25,11 @@ let dart;
 let direction = new THREE.Vector3();
 const dartSpeed = 0.1;
 
+//sideassets
+let croissant;
+let barrel;
+//sideassets
+
 init();
 animate();
 
@@ -50,13 +55,6 @@ function init() {
 	light.shadow.camera.left = -2;
 	light.shadow.mapSize.set(4096, 4096);
 	scene.add(light);
-
-	const floorGeometry = new THREE.PlaneGeometry(8, 8);
-	const floorMaterial = new THREE.MeshPhongMaterial({ color: 0x595959 });
-	const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-	floor.rotation.x = -Math.PI / 2;
-	floor.receiveShadow = true;
-	scene.add(floor);
 
 	renderer = new THREE.WebGLRenderer({ antialias: true });
 	renderer.setPixelRatio(window.devicePixelRatio);
@@ -90,6 +88,22 @@ function init() {
 	loadBalloonModel();
 	loadDartModel("blue");
 	loadDartModel("red");
+	loadCroissant(0, 0, 1);
+	loadCroissant(1, 0.2, -1.5);
+	loadCroissant(-1, -0.2, 2);
+	//barrier
+	loadBarrel(3.3, 1.3, 0.8, 2, 1);
+	loadBarrel(3.3, 0.55, 1.5, 3, 1.5);
+
+	loadBarrel(3.3, 2.6, 0.8, 3, 1);
+	loadBarrel(3.3, 1.55, 1.1, 3, 2);
+
+	loadBarrel(-3.3, 1.3, 0.8, 3, 1);
+	loadBarrel(-3.3, 0.55, 1.5, 3, 1.5);
+
+
+	loadBarrel(-3.3, 2.6, 0.8, 3, 1);
+	loadBarrel(-3.3, 1.55, 1.1, 3, 2);
 
 
 	// Load EXR texture and set it as the scene background
@@ -167,6 +181,10 @@ const standDepth = 2;
 
 //TEXTURES_______________________________________________________________
 const textureLoader = new THREE.TextureLoader();
+//grass texture for the floor
+const stone = textureLoader.load('textures/stones.jpg');
+stone.repeat.set(1, 1);
+stone.wrapS = THREE.RepeatWrapping;
 //white-red texture for the missing face
 const whiteRedTexture = textureLoader.load('textures/white-red_texture.jpg');
 whiteRedTexture.repeat.set(3, 1);
@@ -179,6 +197,13 @@ woodTexture.wrapS = THREE.RepeatWrapping;
 
 
 //______________________________________________________________________
+//floor
+const floorGeometry = new THREE.PlaneGeometry(8, 8);
+const floorMaterial = new THREE.MeshBasicMaterial({ map: stone });
+const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
 // Create left wall
 const leftWallGeometry = new THREE.BoxGeometry(standWidth / 16, standHeight * 1.5, standDepth);
 const leftWallMaterial = new THREE.MeshBasicMaterial({ map: woodTexture });
@@ -309,6 +334,40 @@ function handleController( controller ) {
 	}
 
 }
+
+//sideassets
+function loadCroissant(y, x, r) {
+	const loader = new GLTFLoader();
+	loader.load('assets/croissant/scene.gltf', function (gltf) {
+		const newCroissant = gltf.scene;
+		newCroissant.scale.set(1, 1, 1);
+		newCroissant.position.set(y, 0.4, x); // Adjust the position as needed 
+		//rotation
+		newCroissant.rotation.y = Math.PI / r;
+
+		// Update the reference to the new croissant
+		croissant = newCroissant;
+		scene.add(croissant);
+	});
+}
+function loadBarrel(y, x, h, r, rx) {
+	const loader = new GLTFLoader();
+	loader.load('assets/barrel/scene.gltf', function (gltf) {
+		const newBarrel = gltf.scene;
+		newBarrel.scale.set(1, 1, 1);
+		newBarrel.position.set(y, h, x); // Adjust the position as needed 
+		//rotation
+		newBarrel.rotation.y = Math.PI / r;
+		//siderotation
+		newBarrel.rotation.x = Math.PI / rx;
+
+		// Update the reference to the new barrel
+		barrel = newBarrel;
+		scene.add(barrel);
+	});
+}
+//sideassets
+
 
 function animate() {
 	// renderer.setAnimationLoop(render);
