@@ -9,6 +9,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 //set the scene, camera, renderer and controls
 let camera, scene, renderer, controls;
 let vrDisplay, vrFrameData;
+let balloon;
+
 
 //execute the main functions
 init();
@@ -143,7 +145,7 @@ function loadBalloonModel() {
 	
   
 	loader.load('assets/balloon/scene.gltf', function (gltf) {
-	  const balloon = gltf.scene;
+	  balloon = gltf.scene;
 
 		balloon.scale.set(0.005, 0.005, 0.005);
 		balloon.position.set(0, 0, -2); // Adjust the position as needed
@@ -170,6 +172,21 @@ function loadBalloonModel() {
 
 	});
   }
+  function animateBalloon() {
+	if (balloon) {
+	  // Calculate the vertical position offset using a sine wave
+	  const time = performance.now() * 0.001; // Convert time to seconds
+	  const yOffset = Math.sin(time * 2) * 0.25; // Adjust the amplitude and speed as needed
+	  const xOffset = (time * 2) * 0.25; // Adjust the amplitude and speed as needed
+	  // Update the balloon's position
+	  balloon.position.y = 0 + yOffset;
+	  balloon.position.x = 2 - xOffset;
+	  if(balloon.position.x < -2){
+		balloon.position.x = 2;
+	  }
+	}
+  }
+  
 //  balloon 
 //  Dart
 function loadDartModel(color) {
@@ -194,23 +211,19 @@ function loadDartModel(color) {
 		  // Iterate over the materials defined in the GLTF model
 	  });
 	}
-	
-
-	
   }
  //Dart
 
 //animate function: animate the scene and the camera
 function animate() {
   	renderer.setAnimationLoop(render);
+	  animateBalloon();
 }
 
 //render function: render the scene and the camera
 function render() {
   	renderer.render(scene, camera);
-	if (vrDisplay && renderer.xr.isPresenting) {
-		vrDisplay.submitFrame();
-	}
+	animateBalloon();
 }
 function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
