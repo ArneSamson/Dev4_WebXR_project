@@ -7,11 +7,17 @@ let camera, scene, renderer, controls;
 let vrDisplay, vrFrameData;
 
 let balloon;
+let balloonDirection = 1;
+let balloonSpeed = 0.005;
+let balloonXOffset = 0; // Initial horizontal offset
+let balloonYOffset = 0; // Initial vertical offset
+
 let activeDarts = [];
 
 let dart;
 let direction = new THREE.Vector3();
-const dartSpeed = 0.1;
+const dartSpeed = 1.5;
+
 
 init();
 animate();
@@ -142,7 +148,8 @@ function loadBalloonModel() {
 		balloon = newBalloon;
 		scene.add(balloon);
 		// Restart the animation
-		animate();
+		animateBalloon();
+		
 		// Iterate over the materials defined in the GLTF model
 		// gltf.scene.traverse(function (child) {
 		// 	if (child.isMesh) {
@@ -165,33 +172,26 @@ function loadBalloonModel() {
 	});
 }
 
-let isBalloonRemoved = false;
+// let isBalloonRemoved = false;
 
 function animateBalloon() {
-  if (isBalloonRemoved) {
-    return; // Stop the animation if balloon is removed
-  }
+    if (balloon) {
+        // Update the horizontal position
+        balloonXOffset += balloonDirection * balloonSpeed;
 
-  if (balloon) {
-	console.log("balloon");
-    // Calculate the vertical position offset using a sine wave
-    const time = performance.now() * 0.001; // Convert time to seconds
-    const yOffset = Math.sin(time * 2) * 0.25; // Adjust the amplitude and speed as needed
-    let xOffset = (time * 2) * 0.25; // Adjust the amplitude and speed as needed
-    // Update the balloon's position
-    balloon.position.y = 0 + yOffset;
-    balloon.position.x = 2 - xOffset;
-    if (balloon.position.x < leftWall.position.x + leftWall.geometry.parameters.width / 2) {
-      // Remove the current balloon from the scene
-      console.log("passed wall");
-      scene.remove(balloon);
-      balloon = null; // Reset the balloon reference
-      isBalloonRemoved = true; // Set the flag to true
-      // Create a new balloon and add it to the scene
-      loadBalloonModel();
-      return; // Stop the animation if balloon is not present
+        // Reverse the direction when reaching the left or right boundary
+        if (balloonXOffset <= -2 || balloonXOffset >= 2) {
+            balloonDirection *= -1;
+        }
+
+        // Calculate the vertical position offset using a sine wave
+        const time = performance.now() * 0.001; // Convert time to seconds
+        balloonYOffset = Math.sin(time * 2) * 0.1; // Adjust the amplitude and speed as needed
+
+        // Set the balloon's position
+        balloon.position.x = balloonXOffset;
+        balloon.position.y = balloonYOffset;
     }
-  }
 }
 
 
@@ -247,7 +247,6 @@ function animate() {
 	renderer.setAnimationLoop(render);
 	renderer.setAnimationLoop(() => {
 		render();
-		animateBalloon();
 	});
 }
 
@@ -266,7 +265,6 @@ function render() {
 			}
 		}
 
-
 		if (dart.position.y < 0 || Math.abs(dart.position.x) > 3 || Math.abs(dart.position.z) > 3) {
 			scene.remove(dart);
 			activeDarts.splice(activeDarts.indexOf(activeDart), 1);
@@ -274,6 +272,7 @@ function render() {
 		}
 	});
 
-	renderer.render(scene, camera);
 	animateBalloon();
+
+	renderer.render(scene, camera);
 }
