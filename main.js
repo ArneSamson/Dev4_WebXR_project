@@ -83,7 +83,9 @@ function init() {
 
 	window.addEventListener('resize', onWindowResize, false);
 
-	renderer.domElement.addEventListener('click', shootDart);
+	// renderer.domElement.addEventListener('click', shootDart);
+	renderer.xr.addEventListener('selectstart', shootDart);
+
 }
 
 // Shooting stand dimensions
@@ -217,7 +219,7 @@ function loadDartModel(color) {
 }
 
 function shootDart(event) {
-	const controller = renderer.xr.getController(0);
+	const controller = event.target;
 
 	loadDartModel("red")
 		.then((loadedDart) => {
