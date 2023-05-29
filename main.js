@@ -163,40 +163,33 @@ function loadBalloonModel() {
 		  }
 		}
 	  });
-
-    gltf.scene.traverse(function (child) {
-      if (child.isMesh) {
-        const materials = child.material;
-
-        if (Array.isArray(materials)) {
-          materials.forEach(function (material) {
-            material.color = new THREE.Color(material.color);
-            child.material = material;
-          });
-        } else {
-          materials.color = new THREE.Color(materials.color);
-          child.material = materials;
-        }
-      }
-    });
   });
 }
 
 function animateBalloon() {
-	if (balloon) {
-	  // Calculate the vertical position offset using a sine wave
-	  const time = performance.now() * 0.001; // Convert time to seconds
-	  const yOffset = Math.sin(time * 2) * 0.25; // Adjust the amplitude and speed as needed
-	  let xOffset = (time * 2) * 0.25; // Adjust the amplitude and speed as needed
-	  // Update the balloon's position
-	  balloon.position.y = 0 + yOffset;
-	  balloon.position.x = 2 - xOffset;
-	  if (balloon.position.x < leftWall.position.x + leftWall.geometry.parameters.width / 2) {
-		  // Remove the current balloon from the scene
-		  scene.remove(balloon);
-		  // Create a new balloon and add it to the scene
-		  loadBalloonModel();
+	if (!balloon) {
+		return; // Stop the animation if balloon is not present
 	  }
+	if (balloon) {
+		const loaded = 0;
+		// Calculate the vertical position offset using a sine wave
+		const time = performance.now() * 0.001; // Convert time to seconds
+		const yOffset = Math.sin(time * 2) * 0.25; // Adjust the amplitude and speed as needed
+		let xOffset = (time * 2) * 0.25; // Adjust the amplitude and speed as needed
+		// Update the balloon's position
+		balloon.position.y = 0 + yOffset;
+		balloon.position.x = 2 - xOffset;
+		if (balloon.position.x < leftWall.position.x + leftWall.geometry.parameters.width / 2) {
+			// Remove the current balloon from the scene
+			scene.remove(balloon);
+			balloon = null; // Reset the balloon reference
+			console.log("Game over!");
+			// Create a new balloon and add it to the scene
+			if (balloon = null) {
+				loadBalloonModel();
+				return; // Stop the animation if balloon is not present
+			  }
+		  }
 	}
 }
 
@@ -250,7 +243,10 @@ function onWindowResize() {
 
 function animate() {
   	renderer.setAnimationLoop(render);
-	animateBalloon();
+	  renderer.setAnimationLoop(() => {
+		render();
+		animateBalloon();
+	  });
 }
 
 function render() {
