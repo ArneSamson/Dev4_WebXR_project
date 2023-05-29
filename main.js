@@ -29,7 +29,12 @@ const dartSpeed = 0.1;
 let croissant;
 let barrel;
 let dartboard;
+
 let yoda;
+let yodaDirection = 1;
+let yodaSpeed = 0.001;
+let yodaXOffset = 0; // Initial horizontal offset
+let yodaYOffset = 0; // Initial vertical offset
 //sideassets
 
 init();
@@ -97,7 +102,7 @@ function init() {
 	livesElement.textContent = 'Lives: ' + lives;
 
 	loadStand();
-	loadBalloonModel();
+	loadBalloonModel(2);
 	loadDartModel("blue");
 	loadDartModel("red");
 	loadCroissant(0, 0, 1);
@@ -232,12 +237,12 @@ scene.add(rightWall);
 
 
 //baloon_______________________________________________________________
-function loadBalloonModel() {
+function loadBalloonModel(x) {
 	const loader = new GLTFLoader();
 	loader.load('assets/balloon/scene.gltf', function (gltf) {
 		const newBalloon = gltf.scene;
 		newBalloon.scale.set(0.005, 0.005, 0.005);
-		newBalloon.position.set(2, 0, -3.5); // Adjust the position as needed 
+		newBalloon.position.set(x, 0, -3.5); // Adjust the position as needed 
 
 		// Update the reference to the new balloon
 		balloon = newBalloon;
@@ -278,6 +283,25 @@ function animateBalloon() {
 		// Set the balloon's position
 		balloon.position.x = balloonXOffset;
 		balloon.position.y = balloonYOffset;
+	}
+}
+function animateJoda() {
+	if (yoda) {
+		// Update the horizontal position
+		yodaXOffset += yodaDirection * yodaSpeed;
+
+		// Reverse the direction when reaching the left or right boundary
+		if (yodaXOffset <= -3.41 || yodaXOffset >= 3.41) {
+			yodaDirection *= -1;
+			yoda.rotation.y += 3.14;
+		}
+
+		// Calculate the vertical position offset using a sine wave
+		const time = performance.now() * 0.001; // Convert time to seconds
+
+		// Set the balloon's position
+		yoda.position.x = yodaXOffset;
+		yoda.position.y = yodaYOffset;
 	}
 }
 
@@ -404,7 +428,9 @@ function loadYoda(y, x, h, r) {
 
 		// Update the reference to the new barrel
 		yoda = newYoda;
+		yoda.rotation.y = 1.5708;
 		scene.add(yoda);
+		animate();
 	});
 }
 //sideassets
@@ -451,6 +477,7 @@ function render() {
 	});
 
 	animateBalloon();
+	animateJoda();
 
 	renderer.render(scene, camera);
 }
