@@ -8,6 +8,9 @@ import { XRControllerModelFactory } from 'three/examples/jsm/webxr/XRControllerM
 let camera, scene, renderer, controls;
 let vrDisplay, vrFrameData;
 
+let controller1, controller2;
+let controllerGrip1, controllerGrip2;
+
 let balloon;
 let balloonDirection = 1;
 let balloonSpeed = 0.005;
@@ -18,14 +21,10 @@ let activeDarts = [];
 
 let stand;
 
+let isDartInMotion = false;
 let dart;
 let direction = new THREE.Vector3();
 const dartSpeed = 0.1;
-
-//sideassets
-let croissant;
-let barrel;
-//sideassets
 
 init();
 animate();
@@ -34,7 +33,7 @@ function init() {
 	scene = new THREE.Scene();
 
 	camera = new THREE.PerspectiveCamera(
-		98,
+		80,
 		window.innerWidth / window.innerHeight,
 		0.1,
 		10
@@ -52,6 +51,13 @@ function init() {
 	light.shadow.camera.left = -2;
 	light.shadow.mapSize.set(4096, 4096);
 	scene.add(light);
+
+	const floorGeometry = new THREE.PlaneGeometry(8, 8);
+	const floorMaterial = new THREE.MeshPhongMaterial({ color: 0x595959 });
+	const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+	floor.rotation.x = -Math.PI / 2;
+	floor.receiveShadow = true;
+	scene.add(floor);
 
 	renderer = new THREE.WebGLRenderer({ antialias: true });
 	renderer.setPixelRatio(window.devicePixelRatio);
@@ -75,41 +81,17 @@ function init() {
 				vrDisplay = session.display;
 				vrFrameData = new VRFrameData();
 				renderer.xr.setSession(session);
-	
-				const controllerModelFactory = new XRControllerModelFactory();
-	
-				const controllerGrip1 = renderer.xr.getControllerGrip(0);
-				controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
-				scene.add(controllerGrip1);
-	
-				const controllerGrip2 = renderer.xr.getControllerGrip(1);
-				controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2));
-				scene.add(controllerGrip2);
+
 			});
 		}
 	});
-	
+
 
 	loadStand();
 	loadBalloonModel();
 	loadDartModel("blue");
 	loadDartModel("red");
-	loadCroissant(0, 0, 1);
-	loadCroissant(1, 0.2, -1.5);
-	loadCroissant(-1, -0.2, 2);
-	//barrier
-	loadBarrel(3.3, 1.3, 1, 2, 1);
-	loadBarrel(3.3, 0.55, 1.7, 3, 1.5);
 
-	loadBarrel(3.3, 2.6, 1, 3, 1);
-	loadBarrel(3.3, 1.55, 1.3, 3, 2);
-
-	loadBarrel(-3.3, 1.3, 1, 3, 1);
-	loadBarrel(-3.3, 0.55, 1.7, 3, 1.5);
-
-
-	loadBarrel(-3.3, 2.6, 1, 3, 1);
-	loadBarrel(-3.3, 1.55, 1.3, 3, 2);
 
 	// Load EXR texture and set it as the scene background
 	const textureLoader = new THREE.TextureLoader();
@@ -120,11 +102,56 @@ function init() {
 		console.log('Texture loaded:', texture); // Add this line
 		render();
 	});
+
+
+	//controllers_________________________________________________________ 
+
+	function onSelectStart() {
+		this.userData.isSelecting = true;
+	}
+
+	function onSelectEnd() {
+		this.userData.isSelecting = false;
+	}
+
+	controller1 = renderer.xr.getController(0);
+	controller1.addEventListener('selectstart', onSelectStart);
+	controller1.addEventListener('selectend', onSelectEnd);
+	controller1.addEventListener('connected', function (event) {
+		this.add(buildController(event.data));
+	});
+	controller1.addEventListener('disconnected', function () {
+		this.remove(this.children[0]);
+	});
+	scene.add(controller1);
+
+	controller2 = renderer.xr.getController(1);
+	controller2.addEventListener('selectstart', onSelectStart);
+	controller2.addEventListener('selectend', onSelectEnd);
+	controller2.addEventListener('connected', function (event) {
+		this.add(buildController(event.data));
+	});
+	controller2.addEventListener('disconnected', function () {
+		this.remove(this.children[0]);
+	});
+	scene.add(controller2);
+
+	const controllerModelFactory = new XRControllerModelFactory();
+
+	controllerGrip1 = renderer.xr.getControllerGrip(0);
+	controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
+	scene.add(controllerGrip1);
+
+	controllerGrip2 = renderer.xr.getControllerGrip(1);
+	controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2));
+	scene.add(controllerGrip2);
+	//______________________________________________________________________
+
 	window.addEventListener('resize', onWindowResize, false);
 
 
 	// renderer.domElement.addEventListener('click', shootDart);
-	renderer.xr.addEventListener('selectstart', shootDart);
+	// renderer.xr.addEventListener('selectstart', shootDart);
 }
 
 // Shooting stand dimensions
@@ -134,10 +161,6 @@ const standDepth = 2;
 
 //TEXTURES_______________________________________________________________
 const textureLoader = new THREE.TextureLoader();
-//grass texture for the floor
-const stone = textureLoader.load('textures/stones.jpg');
-stone.repeat.set(1, 1);
-stone.wrapS = THREE.RepeatWrapping;
 //white-red texture for the missing face
 const whiteRedTexture = textureLoader.load('textures/white-red_texture.jpg');
 whiteRedTexture.repeat.set(3, 1);
@@ -150,13 +173,6 @@ woodTexture.wrapS = THREE.RepeatWrapping;
 
 
 //______________________________________________________________________
-//floor
-const floorGeometry = new THREE.PlaneGeometry(8, 8);
-const floorMaterial = new THREE.MeshBasicMaterial({ map: stone });
-const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-floor.rotation.x = -Math.PI / 2;
-floor.receiveShadow = true;
-scene.add(floor);
 // Create left wall
 const leftWallGeometry = new THREE.BoxGeometry(standWidth / 16, standHeight * 1.5, standDepth);
 const leftWallMaterial = new THREE.MeshBasicMaterial({ map: woodTexture });
@@ -243,24 +259,20 @@ function loadDartModel(color) {
 	});
 }
 
-function shootDart(event) {
-	const controller = event.target;
+function shootDart(controller) {
+	// const controller = controller1;
 
-	loadDartModel("red")
-		.then((loadedDart) => {
-			const dart = loadedDart;
-			dart.position.copy(controller.position);
-			dart.quaternion.copy(controller.quaternion);
-			dart.velocity = new THREE.Vector3();
-			dart.velocity.x = -dartSpeed;
-			dart.velocity.applyQuaternion(controller.quaternion);
+	const dart = dart.clone();
+	dart.position.copy(controller.position);
+	dart.quaternion.copy(controller.quaternion);
+	dart.velocity = new THREE.Vector3();
+	dart.velocity.x = -dartSpeed;
+	dart.velocity.applyQuaternion(dart.quaternion);
 
-			scene.add(dart);
-			activeDarts.push({ dart, controller });
-		})
-		.catch((error) => {
-			console.error(error);
-		});
+	scene.add(dart);
+	activeDarts.push({ dart, controller });
+
+	isDartInMotion = true; // Set the flag to indicate a dart is in motion
 }
 
 function onWindowResize() {
@@ -270,50 +282,39 @@ function onWindowResize() {
 	renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-//sideassets
-function loadCroissant(y, x, r) {
-	const loader = new GLTFLoader();
-	loader.load('assets/croissant/scene.gltf', function (gltf) {
-		const newCroissant = gltf.scene;
-		newCroissant.scale.set(1, 1, 1);
-		newCroissant.position.set(y, 0.4, x); // Adjust the position as needed 
-		//rotation
-		newCroissant.rotation.y = Math.PI / r;
+function handleController(controller) {
 
-		// Update the reference to the new croissant
-		croissant = newCroissant;
-		scene.add(croissant);
-	});
+	if (controller.userData.isSelecting) {
+
+		if (isDartInMotion) {
+			return;
+		}
+
+		shootDart(controller);
+
+	}
+
 }
-function loadBarrel(y, x, h, r, rx) {
-	const loader = new GLTFLoader();
-	loader.load('assets/barrel/scene.gltf', function (gltf) {
-		const newBarrel = gltf.scene;
-		newBarrel.scale.set(1, 1, 1);
-		newBarrel.position.set(y, h, x); // Adjust the position as needed 
-		//rotation
-		newBarrel.rotation.y = Math.PI / r;
-		//siderotation
-		newBarrel.rotation.x = Math.PI / rx;
-
-		// Update the reference to the new barrel
-		barrel = newBarrel;
-		scene.add(barrel);
-	});
-}
-//sideassets
-
-
 
 function animate() {
-	renderer.setAnimationLoop(render);
+	// renderer.setAnimationLoop(render);
 	renderer.setAnimationLoop(() => {
 		render();
 		animateBalloon();
+		//controllers_________________________________________________________
+		handleController(controller1);
+		handleController(controller2);
+		//____________________________________________________________________
 	});
 }
 
 function render() {
+
+	//controllers_________________________________________________________
+	handleController(controller1);
+	handleController(controller2);
+	//____________________________________________________________________
+
 	const delta = vrFrameData ? vrFrameData.deltaTime : 0.01;
 
 	activeDarts.forEach((activeDart) => {
@@ -333,9 +334,11 @@ function render() {
 			scene.remove(dart);
 			activeDarts.splice(activeDarts.indexOf(activeDart), 1);
 			console.log('Dart went out of bounds!');
+			isDartInMotion = false;
 		}
 	});
 
-	renderer.render(scene, camera);
 	animateBalloon();
+
+	renderer.render(scene, camera);
 }
