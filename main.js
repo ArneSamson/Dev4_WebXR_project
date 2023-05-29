@@ -10,6 +10,12 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 let camera, scene, renderer, controls;
 let vrDisplay, vrFrameData;
 
+let dart;
+
+let direction = new THREE.Vector3();
+const dartSpeed = 0.1;
+
+
 //execute the main functions
 init();
 animate();
@@ -177,72 +183,71 @@ function loadBalloonModel() {
 
 //  Dart
 function loadDartModel(color) {
-	const loader = new GLTFLoader();
-	if(color == "blue"){
-		loader.load('assets/darts/blue/scene.gltf', function (gltf) {
-			const themodel = gltf.scene;
-	  
-			themodel.scale.set(0.005, 0.005, 0.005);
-				themodel.position.set(0, 1.5, 0); // Adjust the position as needed
-			  scene.add(themodel);
-			  // Iterate over the materials defined in the GLTF model
-		  });
-	}
-	if(color == "red"){
-	loader.load('assets/darts/red/scene.gltf', function (gltf) {
-		const themodel = gltf.scene;
-  
-		themodel.scale.set(0.005, 0.005, 0.005);
-			themodel.position.set(0, 1.5, 0); // Adjust the position as needed
-		  scene.add(themodel);
-		  // Iterate over the materials defined in the GLTF model
-	  });
-	}
-	
-
-	
+	return new Promise((resolve, reject) => {
+		const loader = new GLTFLoader();
+		if (color === "blue") {
+			loader.load('assets/darts/blue/scene.gltf', function (gltf) {
+				const dart = gltf.scene;
+				dart.scale.set(0.005, 0.005, 0.005);
+				// Adjust the position and other properties of the dart if needed
+				resolve(dart);
+			}, undefined, reject);
+		} else if (color === "red") {
+			loader.load('assets/darts/red/scene.gltf', function (gltf) {
+				const dart = gltf.scene;
+				dart.scale.set(0.005, 0.005, 0.005);
+				// Adjust the position and other properties of the dart if needed
+				resolve(dart);
+			}, undefined, reject);
+		} else {
+			reject(new Error('Invalid color for dart'));
+		}
+	});
 }
 
 function shootDart() {
 	// Create the dart
-	const dart = loadDartModel("red");
+	loadDartModel("red")
+		.then((loadedDart) => {
+			dart = loadedDart;
+			// Set the dart's initial position and direction based on the controller's position and orientation
+			const controller = renderer.xr.getController(0);
+			dart.position.copy(controller.position);
+			dart.quaternion.copy(controller.quaternion);
 
-  	// Set the dart's initial position and direction based on the controller's position and orientation
-	const controller = renderer.xr.getController(0);
-	dart.position.copy(controller.position);
-	dart.quaternion.copy(controller.quaternion);
+			// Set the dart's velocity
+			const velocity = new THREE.Vector3();
+			const direction = new THREE.Vector3();
+			controller.getWorldDirection(direction);
+			velocity.copy(direction).multiplyScalar(-0.5);
 
-	// Set the dart's velocity
-	const velocity = new THREE.Vector3();
-	const direction = new THREE.Vector3();
-	controller.getWorldDirection(direction);
-	velocity.copy(direction).multiplyScalar(-0.5);
+			// Add the dart to the scene
+			scene.add(dart);
 
-	// Add the dart to the scene
-	scene.add(dart);
+			// Update the dart's position and velocity every frame
+			const clock = new THREE.Clock();
+			clock.start();
+			const tick = () => {
+				const delta = clock.getDelta();
+				dart.position.add(velocity.clone().multiplyScalar(delta));
+				velocity.y -= 0.01;
+				if (dart.position.y < 0) {
+					scene.remove(dart);
+				} else {
+					requestAnimationFrame(tick);
+				}
+			};
 
-	// Update the dart's position and velocity every frame
-	const clock = new THREE.Clock();
-	clock.start();
-	const tick = () => {
-		const delta = clock.getDelta();
-		dart.position.add(velocity.clone().multiplyScalar(delta));
-		velocity.y -= 0.01;
-		if (dart.position.y < 0) {
-			scene.remove(dart);
-		} else {
-			requestAnimationFrame(tick);
-		}
-	}
+			tick();
 
-	tick();
-
-	//cleanup dart after 5 seconds
-	setTimeout(() => {
-		scene.remove(dart);
-	}
-	, 5000);
-
+			// Cleanup dart after 5 seconds
+			setTimeout(() => {
+				scene.remove(dart);
+			}, 5000);
+		})
+		.catch((error) => {
+			console.error(error);
+		});
 }
 
 
@@ -255,10 +260,17 @@ function animate() {
 
 //render function: render the scene and the camera
 function render() {
+
+	if(dart){
+		//animate dart's movement
+		dart.position.addScaledVector(direction, dartSpeed);
+	}
+
   	renderer.render(scene, camera);
 	if (vrDisplay && renderer.xr.isPresenting) {
 		vrDisplay.submitFrame();
 	}
+
 }
 function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
