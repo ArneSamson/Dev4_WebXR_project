@@ -28,6 +28,8 @@ const dartSpeed = 0.1;
 //sideassets
 let croissant;
 let barrel;
+let dartboard;
+let yoda;
 //sideassets
 
 init();
@@ -105,6 +107,13 @@ function init() {
 	loadBarrel(-3.3, 2.6, 0.8, 3, 1);
 	loadBarrel(-3.3, 1.55, 1.1, 3, 2);
 
+	//dartboards
+	loadDartboard(0, -4, 1, 180);
+	loadDartboard(1.07, -4, 1, 180);
+	loadDartboard(-1.07, -4, 1, 180);
+
+	//salesperson
+	loadYoda(0, -1, -0.1, 180);
 
 	//controllers_________________________________________________________ 
 
@@ -353,6 +362,34 @@ function loadBarrel(y, x, h, r, rx) {
 		// Update the reference to the new barrel
 		barrel = newBarrel;
 		scene.add(barrel);
+	});
+}
+function loadDartboard(y, x, h, r) {
+	const loader = new GLTFLoader();
+	loader.load('assets/dartboard/scene.gltf', function (gltf) {
+		const newBoard = gltf.scene;
+		newBoard.scale.set(1, 1, 1);
+		newBoard.position.set(y, h, x); // Adjust the position as needed 
+		//rotation
+		newBoard.rotation.y = Math.PI / r;
+
+		// Update the reference to the new barrel
+		dartboard = newBoard;
+		scene.add(dartboard);
+	});
+}
+function loadYoda(y, x, h, r) {
+	const loader = new GLTFLoader();
+	loader.load('assets/yoda/scene.gltf', function (gltf) {
+		const newYoda = gltf.scene;
+		newYoda.scale.set(0.015, 0.015, 0.015);
+		newYoda.position.set(y, h, x); // Adjust the position as needed 
+		//rotation
+		newYoda.rotation.y = Math.PI / r;
+
+		// Update the reference to the new barrel
+		yoda = newYoda;
+		scene.add(yoda);
 	});
 }
 //sideassets
