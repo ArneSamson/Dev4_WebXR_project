@@ -24,6 +24,7 @@ const dartSpeed = 0.1;
 
 //sideassets
 let croissant;
+let barrel;
 //sideassets
 
 init();
@@ -96,6 +97,19 @@ function init() {
 	loadCroissant(0, 0, 1);
 	loadCroissant(1, 0.2, -1.5);
 	loadCroissant(-1, -0.2, 2);
+	//barrier
+	loadBarrel(3.3, 1.3, 1, 2, 1);
+	loadBarrel(3.3, 0.55, 1.7, 3, 1.5);
+
+	loadBarrel(3.3, 2.6, 1, 3, 1);
+	loadBarrel(3.3, 1.55, 1.3, 3, 2);
+
+	loadBarrel(-3.3, 1.3, 1, 3, 1);
+	loadBarrel(-3.3, 0.55, 1.7, 3, 1.5);
+
+
+	loadBarrel(-3.3, 2.6, 1, 3, 1);
+	loadBarrel(-3.3, 1.55, 1.3, 3, 2);
 
 	// Load EXR texture and set it as the scene background
 	const textureLoader = new THREE.TextureLoader();
@@ -266,9 +280,25 @@ function loadCroissant(y, x, r) {
 		//rotation
 		newCroissant.rotation.y = Math.PI / r;
 
-		// Update the reference to the new balloon
+		// Update the reference to the new croissant
 		croissant = newCroissant;
 		scene.add(croissant);
+	});
+}
+function loadBarrel(y, x, h, r, rx) {
+	const loader = new GLTFLoader();
+	loader.load('assets/barrel/scene.gltf', function (gltf) {
+		const newBarrel = gltf.scene;
+		newBarrel.scale.set(1, 1, 1);
+		newBarrel.position.set(y, h, x); // Adjust the position as needed 
+		//rotation
+		newBarrel.rotation.y = Math.PI / r;
+		//siderotation
+		newBarrel.rotation.x = Math.PI / rx;
+
+		// Update the reference to the new barrel
+		barrel = newBarrel;
+		scene.add(barrel);
 	});
 }
 //sideassets
