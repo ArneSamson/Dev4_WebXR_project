@@ -8,6 +8,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 //set the scene, camera, renderer and controls
 let camera, scene, renderer, controls;
+let vrDisplay, vrFrameData;
 
 //execute the main functions
 init();
@@ -21,12 +22,12 @@ function init() {
 	scene.background = new THREE.Color(0x808080);
 
 	camera = new THREE.PerspectiveCamera(
-		60,
+		80,
 		window.innerWidth / window.innerHeight,
 		0.1,
 		10
 	);
-	camera.position.set(0, 1.2, 0.3);
+	camera.position.set(0, 1.6, 1);
 
 	scene.add(new THREE.HemisphereLight(0x808080, 0x606060));
 
@@ -59,15 +60,25 @@ function init() {
 	controls = new OrbitControls(camera, renderer.domElement);
 	controls.target.set(0, 1.6, 0);
 	controls.update();
-
+	navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
+		if (supported) {
+		  renderer.xr.enabled = true;
+		  renderer.xr.setReferenceSpaceType('local');
+		  renderer.xr.setSession('immersive-vr').then((session) => {
+			vrDisplay = session.display;
+			vrFrameData = new VRFrameData();
+		  });
+		}
+	  });
 	//balloon
 	loadBalloonModel();
 	//balloon
 	//dart
-	// loadDartModel("blue");
-	// loadDartModel("red");
+	loadDartModel("blue");
+	loadDartModel("red");
 	//dart
 
+	window.addEventListener('resize', onWindowResize, false);
 }
 
 // Shooting stand dimensions
@@ -84,31 +95,29 @@ const whiteRedTexture = textureLoader.load('textures/white-red_texture.jpg');
 whiteRedTexture.repeat.set(3, 1);
 whiteRedTexture.wrapS = THREE.RepeatWrapping;
 //wood texture for the left and right wall
-// const woodTexture = textureLoader.load('textures/wood_texture.jpg');
-// woodTexture.repeat.set(1, 1);
-// woodTexture.wrapS = THREE.RepeatWrapping;
+const woodTexture = textureLoader.load('textures/wood_texture.jpg');
+woodTexture.repeat.set(1, 1);
+woodTexture.wrapS = THREE.RepeatWrapping;
 //______________________________________________________________________
 
 
 // Create the missing half face
-const missingFaceGeometry = new THREE.BoxGeometry(standWidth, standHeight / 4, standDepth/6);
+const missingFaceGeometry = new THREE.BoxGeometry(standWidth, standHeight / 4, standDepth);
 const missingFaceMaterial = new THREE.MeshBasicMaterial({ map: whiteRedTexture });
 const missingFace = new THREE.Mesh(missingFaceGeometry, missingFaceMaterial);
-missingFace.position.set(0, 0.25, -1.2); // Adjust the position as needed
+missingFace.position.set(0, 0.25, -1.90); // Adjust the position as needed
 scene.add(missingFace);
 
 // Create left wall
 const leftWallGeometry = new THREE.BoxGeometry(standWidth / 16, standHeight, standDepth);
-// const leftWallMaterial = new THREE.MeshBasicMaterial({ map: woodTexture });
-const leftWallMaterial = new THREE.MeshBasicMaterial({ color: 0x808080 });
+const leftWallMaterial = new THREE.MeshBasicMaterial({ map: woodTexture });
 const leftWall = new THREE.Mesh(leftWallGeometry, leftWallMaterial);
 leftWall.position.set(-1.90, 0.5, -2); // Adjust the position as needed
 scene.add(leftWall);
 
 // Create right wall
 const rightWallGeometry = new THREE.BoxGeometry(standWidth / 16, standHeight, standDepth);
-// const rightWallMaterial = new THREE.MeshBasicMaterial({ map: woodTexture });
-const rightWallMaterial = new THREE.MeshBasicMaterial({ color: 0x808080 });
+const rightWallMaterial = new THREE.MeshBasicMaterial({ map: woodTexture });
 const rightWall = new THREE.Mesh(rightWallGeometry, rightWallMaterial);
 rightWall.position.set(1.90, 0.5, -2); // Adjust the position as needed
 scene.add(rightWall);
@@ -133,11 +142,11 @@ function loadBalloonModel() {
 
 	
   
-	loader.load('assets/balloon/balloon.gltf', function (gltf) {
-	 	const balloon = gltf.scene;
+	loader.load('assets/balloon/scene.gltf', function (gltf) {
+	  const balloon = gltf.scene;
 
-		balloon.scale.set(0.2, 0.2, 0.2);
-		balloon.position.set(0, 1, -2); // Adjust the position as needed
+		balloon.scale.set(0.005, 0.005, 0.005);
+		balloon.position.set(0, 0, -2); // Adjust the position as needed
 		scene.add(balloon);
 		// Iterate over the materials defined in the GLTF model
 		gltf.scene.traverse(function (child) {
@@ -161,34 +170,34 @@ function loadBalloonModel() {
 
 	});
   }
- //balloon 
- //Dart
-// function loadDartModel(color) {
-// 	const loader = new GLTFLoader();
-// 	if(color == "blue"){
-// 		loader.load('assets/darts/blue/dart.gltf', function (gltf) {
-// 			const themodel = gltf.scene;
+//  balloon 
+//  Dart
+function loadDartModel(color) {
+	const loader = new GLTFLoader();
+	if(color == "blue"){
+		loader.load('assets/darts/blue/scene.gltf', function (gltf) {
+			const themodel = gltf.scene;
 	  
-// 			themodel.scale.set(0.005, 0.005, 0.005);
-// 				themodel.position.set(0, 1.5, 0); // Adjust the position as needed
-// 			  scene.add(themodel);
-// 			  // Iterate over the materials defined in the GLTF model
-// 		  });
-// 	}
-// 	// if(color == "red"){
-// 	// loader.load('assets/darts/red/scene.gltf', function (gltf) {
-// 	// 	const themodel = gltf.scene;
+			themodel.scale.set(0.005, 0.005, 0.005);
+				themodel.position.set(0, 1.5, 0); // Adjust the position as needed
+			  scene.add(themodel);
+			  // Iterate over the materials defined in the GLTF model
+		  });
+	}
+	if(color == "red"){
+	loader.load('assets/darts/red/scene.gltf', function (gltf) {
+		const themodel = gltf.scene;
   
-// 	// 	themodel.scale.set(0.005, 0.005, 0.005);
-// 	// 		themodel.position.set(0, 1.5, 0); // Adjust the position as needed
-// 	// 	  scene.add(themodel);
-// 	// 	  // Iterate over the materials defined in the GLTF model
-// 	//   });
-// 	// }
+		themodel.scale.set(0.005, 0.005, 0.005);
+			themodel.position.set(0, 1.5, 0); // Adjust the position as needed
+		  scene.add(themodel);
+		  // Iterate over the materials defined in the GLTF model
+	  });
+	}
 	
 
 	
-//   }
+  }
  //Dart
 
 //animate function: animate the scene and the camera
@@ -199,4 +208,12 @@ function animate() {
 //render function: render the scene and the camera
 function render() {
   	renderer.render(scene, camera);
+	if (vrDisplay && renderer.xr.isPresenting) {
+		vrDisplay.submitFrame();
+	}
 }
+function onWindowResize() {
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
+	renderer.setSize(window.innerWidth, window.innerHeight);
+  }
