@@ -256,12 +256,14 @@ function render() {
     const { dart, controller } = activeDart;
 
     dart.position.addScaledVector(dart.velocity, delta);
-
-    if (dart.position.distanceTo(balloon.position) < 0.1) {
-      scene.remove(dart);
-      activeDarts.splice(activeDarts.indexOf(activeDart), 1);
-      console.log('Dart hit the balloon!');
-    }
+	if(balloon){
+		if (dart.position.distanceTo(balloon.position) < 0.1) {
+			scene.remove(dart);
+			activeDarts.splice(activeDarts.indexOf(activeDart), 1);
+			console.log('Dart hit the balloon!');
+		  }
+	}
+    
 
     if (dart.position.y < 0 || Math.abs(dart.position.x) > 3 || Math.abs(dart.position.z) > 3) {
       scene.remove(dart);
