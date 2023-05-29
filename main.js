@@ -35,7 +35,7 @@ animate();
 
 function init() {
 	scene = new THREE.Scene();
-
+	scene.background = new THREE.Color(0x87ceeb); 
 	camera = new THREE.PerspectiveCamera(
 		80,
 		window.innerWidth / window.innerHeight,
@@ -104,17 +104,6 @@ function init() {
 
 	loadBarrel(-3.3, 2.6, 0.8, 3, 1);
 	loadBarrel(-3.3, 1.55, 1.1, 3, 2);
-
-
-	// Load EXR texture and set it as the scene background
-	const textureLoader = new THREE.TextureLoader();
-	console.log(textureLoader);
-	textureLoader.load('textures/background.exr', (texture) => {
-		texture.encoding = THREE.LinearEncoding; // Set texture encoding
-		scene.background = texture;
-		console.log('Texture loaded:', texture); // Add this line
-		render();
-	});
 
 
 	//controllers_________________________________________________________ 
