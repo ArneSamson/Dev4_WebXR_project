@@ -134,7 +134,7 @@ scene.add(backWall);
 function loadBalloonModel() {
 	const loader = new GLTFLoader();
 	loader.load('assets/balloon/scene.gltf', function (gltf) {
-	  const newBalloon = new GLTFLoader();
+	  const newBalloon = gltf.scene;
 
 	  	newBalloon.scale.set(0.005, 0.005, 0.005);
 	  	newBalloon.position.set(0, 0, -2); // Adjust the position as needed
