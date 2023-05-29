@@ -22,6 +22,10 @@ let dart;
 let direction = new THREE.Vector3();
 const dartSpeed = 0.1;
 
+//sideassets
+let croissant;
+//sideassets
+
 init();
 animate();
 
@@ -96,7 +100,9 @@ function init() {
 	loadBalloonModel();
 	loadDartModel("blue");
 	loadDartModel("red");
-
+	loadCroissant(0, 0, 1);
+	loadCroissant(1, 0.2, -1.5);
+	loadCroissant(-1, -0.2, 2);
 
 	// Load EXR texture and set it as the scene background
 	const textureLoader = new THREE.TextureLoader();
@@ -160,25 +166,6 @@ function loadBalloonModel() {
 		scene.add(balloon);
 		// Restart the animation
 		animate();
-		// Iterate over the materials defined in the GLTF model
-		// gltf.scene.traverse(function (child) {
-		// 	if (child.isMesh) {
-		// 		const materials = child.material;
-
-		// 		if (Array.isArray(materials)) {
-		// 			// Iterate over multiple materials (if applicable)
-		// 			materials.forEach(function (material) {
-		// 				// Apply the material to the corresponding object
-		// 				material.color = new THREE.Color(material.color);
-		// 				child.material = material;
-		// 			});
-		// 		} else {
-		// 			// Single material case
-		// 			materials.color = new THREE.Color(materials.color);
-		// 			child.material = materials;
-		// 		}
-		// 	}
-		// });
 	});
 }
 function loadStand() {
@@ -264,6 +251,25 @@ function onWindowResize() {
 
 	renderer.setSize(window.innerWidth, window.innerHeight);
 }
+
+//sideassets
+function loadCroissant(y, x, r) {
+	const loader = new GLTFLoader();
+	loader.load('assets/croissant/scene.gltf', function (gltf) {
+		const newCroissant = gltf.scene;
+		newCroissant.scale.set(1, 1, 1);
+		newCroissant.position.set(y, 0.4, x); // Adjust the position as needed 
+		//rotation
+		newCroissant.rotation.y = Math.PI / r;
+
+		// Update the reference to the new balloon
+		croissant = newCroissant;
+		scene.add(croissant);
+	});
+}
+//sideassets
+
+
 
 function animate() {
 	renderer.setAnimationLoop(render);
