@@ -16,6 +16,8 @@ let balloonYOffset = 0; // Initial vertical offset
 
 let activeDarts = [];
 
+let stand;
+
 let dart;
 let direction = new THREE.Vector3();
 const dartSpeed = 0.1;
@@ -46,7 +48,7 @@ function init() {
 	light.shadow.mapSize.set(4096, 4096);
 	scene.add(light);
 
-	const floorGeometry = new THREE.PlaneGeometry(6, 6);
+	const floorGeometry = new THREE.PlaneGeometry(8, 8);
 	const floorMaterial = new THREE.MeshPhongMaterial({ color: 0x595959 });
 	const floor = new THREE.Mesh(floorGeometry, floorMaterial);
 	floor.rotation.x = -Math.PI / 2;
@@ -80,21 +82,21 @@ function init() {
 
 	navigator.xr.requestSession('immersive-vr').then((session) => {
 		renderer.xr.setSession(session);
-	
+
 		const controllerModelFactory = new XRControllerModelFactory();
-	
+
 		const controllerGrip1 = renderer.xr.getControllerGrip(0);
 		controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
 		scene.add(controllerGrip1);
-	
+
 		const controllerGrip2 = renderer.xr.getControllerGrip(1);
 		controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2));
 		scene.add(controllerGrip2);
 	}).catch((error) => {
 		console.error('Failed to start XR session:', error);
 	});
-	
 
+	loadStand();
 	loadBalloonModel();
 	loadDartModel("blue");
 	loadDartModel("red");
@@ -111,7 +113,7 @@ function init() {
 	});
 	window.addEventListener('resize', onWindowResize, false);
 
-	
+
 	// renderer.domElement.addEventListener('click', shootDart);
 	renderer.xr.addEventListener('selectstart', shootDart);
 }
@@ -135,37 +137,19 @@ woodTexture.wrapS = THREE.RepeatWrapping;
 
 
 //______________________________________________________________________
-// Create the missing half face
-const missingFaceGeometry = new THREE.BoxGeometry(standWidth * 1.01, standHeight / 2, standDepth / 30);
-const missingFaceMaterial = new THREE.MeshBasicMaterial({ map: whiteRedTexture });
-const missingFace = new THREE.Mesh(missingFaceGeometry, missingFaceMaterial);
-missingFace.position.set(0, 0.25, -1.03); // Adjust the position as needed
-scene.add(missingFace);
 // Create left wall
 const leftWallGeometry = new THREE.BoxGeometry(standWidth / 16, standHeight * 1.5, standDepth);
-//transparent wall
 const leftWallMaterial = new THREE.MeshBasicMaterial({ map: woodTexture });
 const leftWall = new THREE.Mesh(leftWallGeometry, leftWallMaterial);
-leftWall.position.set(-1.90, 0.5, -2); // Adjust the position as needed
+leftWall.position.set(-3.41, 0.5, -2); // Adjust the position as needed
 scene.add(leftWall);
 // Create right wall
 const rightWallGeometry = new THREE.BoxGeometry(standWidth / 16, standHeight * 1.5, standDepth);
 const rightWallMaterial = new THREE.MeshBasicMaterial({ map: woodTexture });
 const rightWall = new THREE.Mesh(rightWallGeometry, rightWallMaterial);
-rightWall.position.set(1.90, 0.5, -2); // Adjust the position as needed
+rightWall.position.set(3.41, 0.5, -2); // Adjust the position as needed
 scene.add(rightWall);
-// Create roof
-const roofGeometry = new THREE.BoxGeometry(standWidth * 1.01, standHeight / 10, standDepth);
-const roofMaterial = new THREE.MeshBasicMaterial({ color: 0x808080 });
-const roof = new THREE.Mesh(roofGeometry, roofMaterial);
-roof.position.set(0, 2.1, -2); // Adjust the position as needed
-scene.add(roof);
-// Create back wall
-const backWallGeometry = new THREE.BoxGeometry(standWidth * 1.01, standHeight * 1.5, standDepth / 4);
-const backWallMaterial = new THREE.MeshBasicMaterial({ color: 8406838 });
-const backWall = new THREE.Mesh(backWallGeometry, backWallMaterial);
-backWall.position.set(0, 0.5, -3.3); // Adjust the position as needed
-scene.add(backWall);
+
 
 //baloon_______________________________________________________________
 function loadBalloonModel() {
@@ -173,7 +157,7 @@ function loadBalloonModel() {
 	loader.load('assets/balloon/scene.gltf', function (gltf) {
 		const newBalloon = gltf.scene;
 		newBalloon.scale.set(0.005, 0.005, 0.005);
-		newBalloon.position.set(2, 0, -2); // Adjust the position as needed 
+		newBalloon.position.set(2, 0, -3.5); // Adjust the position as needed 
 
 		// Update the reference to the new balloon
 		balloon = newBalloon;
@@ -201,27 +185,39 @@ function loadBalloonModel() {
 		// });
 	});
 }
+function loadStand() {
+	const loader = new GLTFLoader();
+	loader.load('assets/stand/stand.gltf', function (gltf) {
+		const newStand = gltf.scene;
+		newStand.scale.set(0.4, 0.4, 0.4);
+		newStand.position.set(0, 0, 0); // Adjust the position as needed 
+
+		// Update the reference to the new balloon
+		stand = newStand;
+		scene.add(stand);
+	});
+}
 
 // let isBalloonRemoved = false;
 
 function animateBalloon() {
-    if (balloon) {
-        // Update the horizontal position
-        balloonXOffset += balloonDirection * balloonSpeed;
+	if (balloon) {
+		// Update the horizontal position
+		balloonXOffset += balloonDirection * balloonSpeed;
 
-        // Reverse the direction when reaching the left or right boundary
-        if (balloonXOffset <= -2 || balloonXOffset >= 2) {
-            balloonDirection *= -1;
-        }
+		// Reverse the direction when reaching the left or right boundary
+		if (balloonXOffset <= -3.41 || balloonXOffset >= 3.41) {
+			balloonDirection *= -1;
+		}
 
-        // Calculate the vertical position offset using a sine wave
-        const time = performance.now() * 0.001; // Convert time to seconds
-        balloonYOffset = Math.sin(time * 2) * 0.1; // Adjust the amplitude and speed as needed
+		// Calculate the vertical position offset using a sine wave
+		const time = performance.now() * 0.001; // Convert time to seconds
+		balloonYOffset = Math.sin(time * 2) * 0.1; // Adjust the amplitude and speed as needed
 
-        // Set the balloon's position
-        balloon.position.x = balloonXOffset;
-        balloon.position.y = balloonYOffset;
-    }
+		// Set the balloon's position
+		balloon.position.x = balloonXOffset;
+		balloon.position.y = balloonYOffset;
+	}
 }
 
 
