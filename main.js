@@ -171,7 +171,7 @@ function onWindowResize() {
 
 function animate() {
   renderer.setAnimationLoop(render);
-  animateBalloon();
+  
 }
 
 function render() {
@@ -196,5 +196,4 @@ function render() {
   });
 
   renderer.render(scene, camera);
-  animateBalloon();
 }
