@@ -37,7 +37,7 @@ animate();
 
 function init() {
 	scene = new THREE.Scene();
-	scene.background = new THREE.Color(0x87ceeb); 
+	scene.background = new THREE.Color(0x87ceeb);
 	camera = new THREE.PerspectiveCamera(
 		80,
 		window.innerWidth / window.innerHeight,
@@ -84,7 +84,17 @@ function init() {
 			});
 		}
 	});
-	
+
+	//score setup
+	// Update the score value
+	const scoreElement = document.getElementById('score');
+	const score = 0; // Replace with your actual score value
+	scoreElement.textContent = 'Score: ' + score;
+
+	// Update the lives value
+	const livesElement = document.getElementById('lives');
+	const lives = 3; // Replace with your actual lives value
+	livesElement.textContent = 'Lives: ' + lives;
 
 	loadStand();
 	loadBalloonModel();
@@ -115,12 +125,17 @@ function init() {
 	//salesperson
 	loadYoda(0, -1, -0.1, 180);
 
+
+
+
+
+
 	//controllers_________________________________________________________ 
 
 	let isDartInMotion = false;
 
 	function onSelectStart() {
-		if(!isDartInMotion){
+		if (!isDartInMotion) {
 			isDartInMotion = true;
 			shootDart();
 		}
@@ -159,7 +174,7 @@ function init() {
 	controllerGrip1 = renderer.xr.getControllerGrip(0);
 	controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
 	scene.add(controllerGrip1);
-	
+
 	controllerGrip2 = renderer.xr.getControllerGrip(1);
 	controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2));
 	scene.add(controllerGrip2);
@@ -315,19 +330,19 @@ function onWindowResize() {
 	renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-function handleController( controller ) {
+function handleController(controller) {
 
-	if ( controller.userData.isSelecting ) {
+	if (controller.userData.isSelecting) {
 
-		const object = room.children[ count ++ ];
+		const object = room.children[count++];
 
-		object.position.copy( controller.position );
-		object.userData.velocity.x = ( Math.random() - 0.5 ) * 3;
-		object.userData.velocity.y = ( Math.random() - 0.5 ) * 3;
-		object.userData.velocity.z = ( Math.random() - 9 );
-		object.userData.velocity.applyQuaternion( controller.quaternion );
+		object.position.copy(controller.position);
+		object.userData.velocity.x = (Math.random() - 0.5) * 3;
+		object.userData.velocity.y = (Math.random() - 0.5) * 3;
+		object.userData.velocity.z = (Math.random() - 9);
+		object.userData.velocity.applyQuaternion(controller.quaternion);
 
-		if ( count === scene.children.length ) count = 0;
+		if (count === scene.children.length) count = 0;
 
 	}
 
@@ -408,8 +423,8 @@ function animate() {
 function render() {
 
 	//controllers_________________________________________________________
-	handleController( controller1 );
-	handleController( controller2 );
+	handleController(controller1);
+	handleController(controller2);
 	//____________________________________________________________________
 
 	const delta = vrFrameData ? vrFrameData.deltaTime : 0.01;
