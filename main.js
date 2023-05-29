@@ -32,7 +32,7 @@ let dartboard;
 
 let yoda;
 let yodaDirection = 1;
-let yodaSpeed = 0.001;
+let yodaSpeed = 0.005;
 let yodaXOffset = 0; // Initial horizontal offset
 let yodaYOffset = 0; // Initial vertical offset
 //sideassets
@@ -89,18 +89,6 @@ function init() {
 			});
 		}
 	});
-
-	//score setup
-	// Update the score value
-	const scoreElement = document.getElementById('score');
-	const score = 0; // Replace with your actual score value
-	scoreElement.textContent = 'Score: ' + score;
-
-	// Update the lives value
-	const livesElement = document.getElementById('lives');
-	const lives = 3; // Replace with your actual lives value
-	livesElement.textContent = 'Lives: ' + lives;
-
 	loadStand();
 	loadBalloonModel(2);
 	loadDartModel("blue");
